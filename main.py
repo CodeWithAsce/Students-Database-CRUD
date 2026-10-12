@@ -107,12 +107,19 @@ def create_student(student: Student):
     return {"message": "Student created", "id": student_id}
 
 
+
 @app.get("/students")
-def get_students():
+def get_students(course: str | None = None):
     with get_connection() as conn:
-        rows = conn.execute(
-            "SELECT * FROM students ORDER BY id"
-        ).fetchall()
+        if course:
+            rows = conn.execute(
+                "SELECT * FROM students WHERE course = ? ORDER BY id",
+                (course,)
+            ).fetchall()
+        else:
+            rows = conn.execute(
+                "SELECT * FROM students ORDER BY id"
+            ).fetchall()
 
     return [dict(row) for row in rows]
 
