@@ -1,55 +1,60 @@
 # Students Database CRUD Application
 
-## Project Overview
-This project is a Student Management REST API developed using Python, FastAPI, and SQLite. It allows users to create, view, update, and delete student records.
-
-## Technologies Used
-- Python
-- FastAPI
-- SQLite
-- Uvicorn
-- Pydantic
+A student management REST API built using Python, FastAPI, and SQLite.
 
 ## Features
-- Create a new student record
-- View all student records
+
+- Create a student record
+- View all students
 - View a student by ID
 - Update student details
 - Delete a student record
-- Validate student input
-- Store records in an SQLite database
+- Validate email addresses and dates of birth
+- Store student data in an SQLite database
 
-## Project Structure
-- `main.py` — API endpoints and database operations
-- `students.db` — SQLite database, created automatically
-- `requirements.txt` — Python dependencies
-- `README.md` — Project documentation
+## Technologies Used
 
-## Requirements
-- Python 3.14 or compatible Python version
-- pip
+- Python
+- FastAPI
+- SQLite
+- Pydantic
+- Uvicorn
 
-## Installation and Setup
+## Project Setup
 
-Open the terminal in the project directory and run:
+### 1. Clone the repository
+
+```bash
+git clone YOUR_GITHUB_REPOSITORY_URL
+cd Students-Database-CRUD
+```
+
+Replace `YOUR_GITHUB_REPOSITORY_URL` with your repository's actual URL.
+
+### 2. Create and activate a virtual environment
+
+Windows PowerShell:
 
 ```powershell
 py -m venv .venv
+.\.venv\Scripts\Activate.ps1
 ```
 
-Install the dependencies:
+### 3. Install dependencies
 
-```powershell
-.\.venv\Scripts\python.exe -m pip install -r requirements.txt
+```bash
+python -m pip install -r requirements.txt
 ```
 
-## Run the Application
+### 4. Run the application
 
-```powershell
-.\.venv\Scripts\python.exe -m uvicorn main:app --reload
+```bash
+python -m uvicorn main:app --reload
 ```
 
-Open the interactive API documentation in your browser:
+### 5. Open the API documentation
+
+Visit:
 
 http://127.0.0.1:8000/docs
 
@@ -57,28 +62,33 @@ http://127.0.0.1:8000/docs
 
 | Method | Endpoint | Description |
 |---|---|---|
-| GET | `/` | Check API status |
 | POST | `/students` | Create a student |
-| GET | `/students` | Retrieve all students |
-| GET | `/students/{student_id}` | Retrieve one student |
+| GET | `/students` | List all students |
+| GET | `/students/{student_id}` | Get a student by ID |
 | PUT | `/students/{student_id}` | Update a student |
 | DELETE | `/students/{student_id}` | Delete a student |
 
-## Example Student Data
+## Example Request
+
+Use this JSON body with `POST /students`:
 
 ```json
 {
-  "name": "Aman Kumar",
-  "age": 20,
+  "name": "Rahul Sharma",
+  "date_of_birth": "2005-08-15",
+  "email": "rahul.test@example.com",
   "course": "B.Tech CSE"
 }
 ```
 
-## Testing
-The API endpoints can be tested using the interactive Swagger UI at `/docs`.
+## Database
 
-## Learning Outcome
-This project demonstrates REST API development, database integration, CRUD operations, and input validation using Python.
+Student records are stored in an SQLite database named `students.db`. The application initializes the database when it starts.
+
+## Note
+
+Do not upload the virtual environment, Python cache folders, database files, or database backups to GitHub.
 
 ## Author
-Student Developer
+
+Student Project — Python Backend Development
