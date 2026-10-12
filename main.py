@@ -1,11 +1,12 @@
 
 from fastapi import FastAPI, HTTPException
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, EmailStr
+from datetime import date
 import sqlite3
 
 app = FastAPI(
     title="Students Database CRUD API",
-    description="A simple student management system",
+    description="Student management using FastAPI and SQLite",
     version="1.0.0"
 )
 
@@ -20,14 +21,54 @@ def get_connection():
 
 def create_table():
     with get_connection() as conn:
-        conn.execute("""
-            CREATE TABLE IF NOT EXISTS students (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                name TEXT NOT NULL,
-                age INTEGER NOT NULL,
-                course TEXT NOT NULL
-            )
-        """)
+        columns = conn.execute(
+            "PRAGMA table_info(students)"
+        ).fetchall()
+
+        if not columns:
+            conn.execute("""
+                CREATE TABLE students (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    name TEXT NOT NULL,
+                    date_of_birth TEXT NOT NULL,
+                    email TEXT NOT NULL,
+                    course TEXT NOT NULL
+                )
+            """)
+            return
+
+        existing_columns = {row["name"] for row in columns}
+
+        # Migrate old database safely when age is present
+        if "age" in existing_columns:
+            conn.execute("""
+                CREATE TABLE students_new (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    name TEXT NOT NULL,
+                    date_of_birth TEXT,
+                    email TEXT,
+                    course TEXT NOT NULL
+                )
+            """)
+
+            conn.execute("""
+                INSERT INTO students_new (id, name, course)
+                SELECT id, name, course FROM students
+            """)
+
+            conn.execute("DROP TABLE students")
+            conn.execute("ALTER TABLE students_new RENAME TO students")
+
+        else:
+            if "date_of_birth" not in existing_columns:
+                conn.execute(
+                    "ALTER TABLE students ADD COLUMN date_of_birth TEXT"
+                )
+
+            if "email" not in existing_columns:
+                conn.execute(
+                    "ALTER TABLE students ADD COLUMN email TEXT"
+                )
 
 
 create_table()
@@ -35,7 +76,8 @@ create_table()
 
 class Student(BaseModel):
     name: str = Field(min_length=1, max_length=100)
-    age: int = Field(gt=0, le=120)
+    date_of_birth: date
+    email: EmailStr
     course: str = Field(min_length=1, max_length=100)
 
 
@@ -48,9 +90,18 @@ def home():
 def create_student(student: Student):
     with get_connection() as conn:
         cursor = conn.execute(
-            "INSERT INTO students (name, age, course) VALUES (?, ?, ?)",
-            (student.name, student.age, student.course)
+            """
+            INSERT INTO students (name, date_of_birth, email, course)
+            VALUES (?, ?, ?, ?)
+            """,
+            (
+                student.name,
+                student.date_of_birth.isoformat(),
+                str(student.email),
+                student.course
+            )
         )
+
         student_id = cursor.lastrowid
 
     return {"message": "Student created", "id": student_id}
@@ -84,8 +135,18 @@ def get_student(student_id: int):
 def update_student(student_id: int, student: Student):
     with get_connection() as conn:
         cursor = conn.execute(
-            "UPDATE students SET name = ?, age = ?, course = ? WHERE id = ?",
-            (student.name, student.age, student.course, student_id)
+            """
+            UPDATE students
+            SET name = ?, date_of_birth = ?, email = ?, course = ?
+            WHERE id = ?
+            """,
+            (
+                student.name,
+                student.date_of_birth.isoformat(),
+                str(student.email),
+                student.course,
+                student_id
+            )
         )
 
         if cursor.rowcount == 0:
